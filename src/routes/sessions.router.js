@@ -1,9 +1,9 @@
 import { Router } from "express"
-import { getSessions, createSession } from "../controllers/sessions.controller.js"
+import SessionsController from "../controllers/sessions.controller.js"
 
 const router = Router()
-
-router.get ("/", getSessions)
-router.post("/", createSession)
-
+const sessionsController = new SessionsController()
+//endpoints 
+router.post("/register", sessionsController.register)
+router.get("/", sessionsController.getUsers)
 export default router
