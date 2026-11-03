@@ -1,0 +1,22 @@
+{
+  "name": "proyecto-eventos",
+  "version": "1.0.0",
+  "description": "Plataforma de eventos e inscripciones",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [],
+  "author": "Lautaro Cardozo",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "mongoose": "^9.11.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
