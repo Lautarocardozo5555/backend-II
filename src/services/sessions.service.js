@@ -1,5 +1,5 @@
 import UserRepository from "../repositories/users.repository.js";
-import { createHash } from "../utils/hash.js";
+import { createHash, isValidPassword } from "../utils/hash.js";
 
 const userRepository = new UserRepository()
 
@@ -31,5 +31,42 @@ export default class SessionsService {
     async getUsers() {
         const users = await userRepository.getAllUsers()
         return users
+    }
+
+    async loginUser(credentials) {
+        const {email, password} = credentials
+
+        //validamos que este email y contraseña
+        if(!email || !password) {
+            const error = new Error("Credenciales inválidas")
+            error.statusCode = 400
+            throw error
+        }
+        const normalizedEmail = email.toLowerCase().trim()
+
+        const user = await userRepository.getUserByEmail(normalizedEmail)
+
+        //si no existe el usuario, respondemos con mensaje generico
+        if(!user) {
+            const error = new Error ("Credenciales inválidas")
+            error.statusCode = 401
+            throw error
+        }
+
+        //comparar contraseñas con bycript
+        const ValidPassword = await isValidPassword (password, user.password)
+        
+        if(!ValidPassword) {
+            const error = new Error("Credenciales inválidas");
+            error.statusCode = 401;
+            throw error;
+        }
+
+        //retornamos los datos minimos para el payload
+        return {
+            id: user._id,
+            email:user.email,
+            role: user.role
+        }
     }
 }

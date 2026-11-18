@@ -1,16 +1,18 @@
 # Plataforma de Eventos e Inscripciones
 
 ## Descripción
-Este proyecto es la base arquitectónica y lógica de una API REST para una plataforma de eventos e inscripciones.
-Forma parte de la **Pre-entrega 2** del curso Backend II. En esta entrega se implementó un **registro seguro de usuarios** bajo una **arquitectura por capas estricta** (Routing, Controller, Service, Repository, DAO y Model), junto con el hasheo seguro de contraseñas.
+Este proyecto es una API REST para una plataforma de eventos e inscripciones desarrollada con Node.js, Express, MongoDB y Mongoose. 
+Forma parte de la **Pre-entrega 3** del curso Backend II. En esta etapa se implementó el sistema completo de **Autenticación con JWT y Cookies HTTP-Only**, incluyendo registro, login seguro con bcrypt, middleware de autenticación, ruta protegida `/current` y cierre de sesión (`logout`).
 
 ## Tecnologías utilizadas
 - Node.js
 - Express
 - MongoDB + Mongoose
--bcrypt (hasheo seguro de contraseñas)
-- dotenv (manejo de variables de entorno)
-- ES Modules (import/export)
+- JSON Web Token (JWT)
+- cookie-parser (manejo de cookies HTTP-Only)
+- bcrypt (hasheo seguro de contraseñas)
+- dotenv (variables de entorno)
+- ES Modules
 
 ## Instalación
 1. Clonar el repositorio:
@@ -28,6 +30,8 @@ PORT=
 NODE_ENV=
 MONGO_URL=
 JWT_SECRET=
+JWT_EXPIRES_IN=
+NODE_ENV=
 
 # Ejecución:
 Para iniciar el servidor en modo desarrollo con nodemon:
@@ -56,14 +60,18 @@ src/
 ├── models/                # Esquemas y Modelos de Mongoose
 │   ├── User.js
 │   └── Event.js
-├── middlewares/           # Middlewares de validación o autenticación
+    └── Session.js
+├── middlewares/     
+    └── auth.middleware      # Middlewares de validación o autenticación
 └── utils/                 # Funciones auxiliares (hasheo de contraseñas)
     └── hash.js
+    └── jwt.js
 
 # Rutas disponibles:
 GET/api/health: 
 -Descripción: Verifica el estado del servidor.
 - Respuesta: { "status": "ok", "message": "Servidor activo" }
+
 POST /api/sessions/register 
 - Descripción: Registro seguro de un nuevo usuario.
 -Body(JSON):
@@ -73,6 +81,35 @@ POST /api/sessions/register
   "email": "ana@mail.com",
   "password": "Secreta123"
 }
+-Response 201:
+{ "status": "success", "message": "Usuario registrado correctamente" }
+
+POST /api/sessions/login
+-Descripción: Valida credenciales, compara con bcrypt y genera un jwt en cookie currentUser
+-Body(JSON):
+{ 
+  "email": "ana@mail.com", 
+  "password": "Secreta123" }
+-Response 200(Seta cookie HttpOnly):
+{ "status": "success", "message": "Login correcto"}
+-Response 401(credenciales incorrectas):
+{ "status": "error", "message": "Credenciales inválidas" }
+
+GET /api/sessions/current
+-Descripción: Ruta protegida por middleware. Lee la cookie, verifica el jwt y devuelve los datos del usuario.
+-Response 200 (Con cookie válida): 
+{ "status": "success", 
+"payload": { "id": "665f2a...", 
+"email": "ana@mail.com", 
+"role": "user" } }
+-Response 401 (Sin cookie o token inválido):
+{ "status": "error", "message": "No autenticado" }
+
+POST /api/sessions/logout
+-Descripción: Elimina la cookie de autenticacion currentUser.
+-Response 200: 
+{ "status": "success", "message": "Sesión cerrada" }
+
 -Características y validaciones:
 Campos obligatorios requeridos (400 Bad Request).
 
@@ -97,10 +134,8 @@ Seguridad: El hash de la contraseña no se expone en la respuesta JSON.
     "role": "user"
   }
 }
-GET /api/sessions:
--Descripción: Obtiene el listado de usuarios registrados (solo campos seguros).
--Respuesta(200 OK): Devuelve la lista de usuarios omitiendo contraseñas.
+
 
 # Notas
 .env y node_modules están excluidos en .gitignore.
-La arquitectura por capas fue respetada de forma estricta: las rutas llaman a controladores, los controladores a servicios, los servicios a repositorios y los repositorios a DAOs.
+La arquitectura por capas fue respetada de forma estricta

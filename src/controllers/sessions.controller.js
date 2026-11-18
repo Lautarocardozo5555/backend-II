@@ -1,4 +1,5 @@
 import SessionsService from "../services/sessions.service.js";
+import { generateToken } from "../utils/jwt.js";
 
 const sessionsService = new SessionsService()
 
@@ -70,5 +71,47 @@ export default class SessionsController {
                 message: "Error interno del servidor"
             });
         }
+    }
+
+    //login
+    login = async (req, res) => {
+        try {
+            const userData = await sessionsService.loginUser(req.body)
+
+            //generar jwt con el payload {id, email, role}
+            const token = generateToken(userData)
+
+            //guardar el token en una cookie
+            res.cookie('currentUser', token,{
+                httpOnly: true,
+                maxAge: 3600000,
+                sameSite: 'lax',
+                secure: process.env.NODE_ENV === 'production'
+            })
+            res.status(200).json({
+                status:"success",
+                message:"Login correcto"
+            })
+        } catch (error) {
+            res.status(error.statusCode || 500).json({
+                status:"error",
+                message: error.message || "Error al iniciar sesión"
+            })
+        }
+    }
+
+    getCurrentUser = (req, res) => {
+        res.status(200).json({
+            status: "success",
+            payload: req.user
+        });
+    }
+
+    logout = (req, res) => {
+        res.clearCookie('currentUser');
+        res.status(200).json({
+            status: "success",
+            message: "Sesión cerrada"
+        });
     }
 }
